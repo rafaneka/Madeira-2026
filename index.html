@@ -35,9 +35,9 @@ main{max-width:760px;margin:0 auto;padding:14px}
 .day-card.purple{border-color:var(--purple)}.day-card.blue{border-color:var(--blue)}.day-card.green{border-color:var(--green)}.day-card.orange{border-color:var(--orange)}.day-card.red{border-color:var(--red)}
 .item{padding:13px 13px 12px;border-bottom:1px solid var(--line);display:flex;gap:11px}
 .item:last-child{border-bottom:0}
-.check{width:27px;height:27px;flex:0 0 27px;border-radius:50%;border:2px solid #b8c2cc;background:#fff;display:flex;align-items:center;justify-content:center;margin-top:1px;cursor:pointer;font-weight:900;color:#fff}
-.item.done .check{background:var(--green);border-color:var(--green)}
-.item.done .check:after{content:"✓"}.item.done .place{text-decoration:line-through;color:#77818a}
+.check{-webkit-appearance:none;appearance:none;width:27px;height:27px;flex:0 0 27px;border-radius:50%;border:2px solid #b8c2cc;background:#fff;display:flex;align-items:center;justify-content:center;margin-top:1px;cursor:pointer;font-weight:900;color:#fff}
+.item.done .check{background:var(--green);border-color:var(--green);transform:scale(1.04)}
+.item.done .check:after{content:"✓"}.check:active,.done-btn:active{transform:scale(.96)}.item.done .place{text-decoration:line-through;color:#77818a}
 .item-main{min-width:0;flex:1}.time{font-size:12px;font-weight:800;color:var(--navy)}.stage{font-size:10px;letter-spacing:.08em;color:var(--muted);font-weight:800;margin-left:7px}
 .place{font-size:16px;font-weight:800;margin:2px 0 5px;line-height:1.25}
 .desc{font-size:13px;line-height:1.45;color:#465461}.meta{font-size:11px;color:var(--muted);margin-top:7px}
@@ -141,32 +141,57 @@ function renderTabs(){
   });
 }
 
+function googleMapsUrl(place){
+  const query = String(place || "") + " Madeira, Portugal";
+  return "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(query);
+}
+
 function itemHTML(it){
   const done=!!checked[it.id];
-  const safe=(s)=>String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+  const safe=(s)=>String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"','&quot;');
+  const mapUrl = (it.map && it.map.startsWith("http")) ? it.map : googleMapsUrl(it.place);
   return `<div class="item ${done?'done':''}" data-id="${it.id}">
-    <button class="check" aria-label="Marcar visitado"></button>
+    <button type="button" class="check" aria-label="${done?'Desmarcar':'Marcar'} ${safe(it.place)} como visitado"></button>
     <div class="item-main">
       <div><span class="time">${safe(it.time)}</span><span class="stage">${safe(it.stage)}</span></div>
       <div class="place">${safe(it.place)}</div>
       ${it.desc?`<div class="desc">${safe(it.desc)}</div>`:""}
       ${it.duration?`<div class="meta">⏱️ ${safe(it.duration)}${it.logistics?` · ${safe(it.logistics)}`:""}</div>`:""}
       <div class="actions">
-        ${it.map && it.map.startsWith("http")?`<a class="btn map-btn" target="_blank" rel="noopener" href="${it.map}">📍 Abrir no Maps</a>`:""}
-        ${it.checkable?`<button class="btn done-btn">${done?"✓ Visitado":"Marcar visitado"}</button>`:""}
+        <a class="btn map-btn" target="_blank" rel="noopener" href="${mapUrl}">📍 Abrir no Google Maps</a>
+        ${it.checkable?`<button type="button" class="btn done-btn">${done?"✓ Visitado":"Marcar visitado"}</button>`:""}
       </div>
     </div>
   </div>`;
 }
 
-function attachChecks(root=document){
-  root.querySelectorAll(".item").forEach(el=>{
-    const id=el.dataset.id;
-    const fn=()=>{ if(!DATA.items.find(x=>x.id===id)?.checkable) return; checked[id]=!checked[id]; save(); renderCurrent(); };
-    el.querySelector(".check")?.addEventListener("click",fn);
-    el.querySelector(".done-btn")?.addEventListener("click",fn);
-  });
-}
+// Event delegation: works reliably even after the activity cards are re-rendered.
+document.addEventListener("click", (event)=>{
+  const button = event.target.closest(".check, .done-btn");
+  if(!button) return;
+  const item = button.closest(".item");
+  if(!item) return;
+  const id = item.dataset.id;
+  const dataItem = DATA.items.find(x=>x.id===id);
+  if(!dataItem || !dataItem.checkable) return;
+  event.preventDefault();
+  checked[id] = !checked[id];
+  save();
+  const active = document.querySelector(".view.active")?.id;
+  if(active === "home") {
+    renderTabs();
+    renderDay();
+  } else if(active === "all") {
+    renderAll(document.getElementById("search").value);
+  }
+  // Move gently to the next unchecked activity.
+  if(checked[id]) {
+    const next = document.querySelector('.item:not(.done)');
+    if(next) setTimeout(()=>next.scrollIntoView({behavior:"smooth", block:"center"}), 80);
+  }
+});
+
+function attachChecks(root=document){ /* kept for compatibility; clicks use event delegation above */ }
 
 function renderDay(){
   const day=DATA.days[selectedDay], box=document.getElementById("dayContent");
