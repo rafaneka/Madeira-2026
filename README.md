@@ -1,11 +1,11 @@
-# Madeira 2026 — Web App v3.1.0
+# Madeira 2026 WebApp v3.1.2
 
 PWA do roteiro da Madeira (05–09 outubro 2026).
 
-## v3.1.0
-- Aba Hoje: sem edição; apenas check circular e Google Maps.
-- Estatísticas de Hoje mostram o progresso do dia selecionado.
-- Barra do cabeçalho continua a mostrar o progresso global.
-- Aba Roteiro mantém edição, eliminação e adição de cartões.
-- Checks podem ser feitos em qualquer dia, independentemente da data atual.
-- Cache da PWA atualizada para v3.1.0.
+## v3.1.2
+- Dia 6: Ponta de São Lourenço + Machico + Teleférico + Monte Palace + Carros de Cesto.
+- Dia 8: Pico do Areeiro + PR1 até Pedra Rija + deslocação para Achada do Teixeira + PR1.2 até Pico Ruivo + Santana + Faial.
+- Reserva PR1: início entre 08:30–09:00, disponibilidade de 1h10.
+- Reserva PR1.2: início entre 10:00–10:30, disponibilidade de 1h10.
+- Mantidas as funcionalidades de edição/eliminação/adição da aba Roteiro e checks da aba Hoje.
+- Cache da PWA atualizada para v3.1.2.
